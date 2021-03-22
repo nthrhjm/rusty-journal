@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-/// Written tasks to the journal file.
 pub enum Action {
+    /// Write tasks to the journak file.
     Add {
         /// The task description text.
         text: String,
