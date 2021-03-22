@@ -5,8 +5,8 @@ A command line to-do app written in Rust.
 The created task will be saved in json format.
 
 ### USAGE:
-    cargo build
-    target/debug/rusty-journal [OPTIONS] <SUBCOMMAND>
+    cargo build --release
+    target/release/rusty-journal [OPTIONS] <SUBCOMMAND>
 
 ### FLAGS:
     -h, --help       Prints help information
