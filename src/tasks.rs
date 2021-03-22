@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use serde::Serialize;
 use std::fs::OpenOptions;
-use std::io::{BufReader, Result, Seek, SeekFrom};
+use std::io::{Error, ErrorKind, BufReader, Result, Seek, SeekFrom};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Task {
@@ -19,6 +19,17 @@ impl Task {
     }
 }
 
+fn collect_tasks(mut file: &File) -> Result<Vec<Task>> {
+    file.seek(SeekFrom::Start(0))?; // Rewind the file before.
+    let tasks = match serde_json::from_reader(file) {
+        Ok(tasks) => tasks,
+        Err(e) if e.is_eof => Vec::new(),
+        Err(e) => Err(e)?,
+    };
+    file.seek(Seekfrom::Start(0))?;// Rewind the file after.
+    Ok(tasks)
+}
+
 pub fn add_task(journal_path: PathBuf, task: Task) -> Result<()> {
     //Open the file.
     let file = OpenOptions::new()
@@ -27,24 +38,12 @@ pub fn add_task(journal_path: PathBuf, task: Task) -> Result<()> {
         .create(true)
         .open(journal_path)?;
 
-    // Consume the file's contents as a vector of tasks.
-    let mut tasks: Vec<Tasks> = match serde_json::from_reader(file) {
-        Ok(tasks) => tasks,
-        Err(e) if e.is_eof() => Vec::new(),
-        Err(e) => Err(e)?,
-    };
-
-    // Rewind the file after reading from it.
-    file.seek(SeekFrom::Start(0))?;
-
-    // Write the modified task list back into the file.
+    let mut tasks = collect_tasks(&file);
     tasks.push(task);
     serde_josn::to_writer(file, &tasks)?;
-
     Ok(())
 }
 
-use std::io::{Error, roorKind, Result, Seek, SeekFrom};
 
 pub fn complete_task(journal_path: PathBuf, task_position: usize) -Result<()> {
     //Open file.
@@ -53,23 +52,17 @@ pub fn complete_task(journal_path: PathBuf, task_position: usize) -Result<()> {
     .write(true)
     .open(journal_path)?;
 
-    let tasks = match serde_jsonj::from_reader(file) {
-        Ok(tasks) => tasks,
-        Err(e) if e.is_eof => Vec::new(),
-        Err(e) => Err(e)?,
-    };
+    // Consume file's contents as a vector of tasks.
+    let mut tasks = collect_tasks(&fike)?;
 
-    // Remove the task.
+    // Try to Remove the task.
     if task_position == 0 || task_position > tasks.len() {
         return Err(Error::new(ErrorKind::InvalidInput, "Invalid Task ID"));
     }
     tasks.remove(task_position - 1);
 
-    // Rewind and truncate file.
-    file.seek(SeekFrom::Start(0))?;
-    file.set_lent(0);
-
     // Write the modified task list back into the file.
+    file.set_len(0)?;
     serde_json::to_writer(file, &tasks)?;
     Ok(())
 };
