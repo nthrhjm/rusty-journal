@@ -6,7 +6,7 @@ The created task will be saved in json format.
 
 ### USAGE:
     cargo build --release
-    target/release/rusty-journal [OPTIONS] <SUBCOMMAND>
+    rusty-journal/target/release/rusty-journal [OPTIONS] <SUBCOMMAND>
 
 ### FLAGS:
     -h, --help       Prints help information
